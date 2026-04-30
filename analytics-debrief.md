@@ -64,3 +64,15 @@ Run daily or weekly reports using this format. Pull data from PostHog MCP.
   - up/down vs prior period
   - where drop-offs concentrate
   - where gains occurred
+
+---
+
+## Checklist
+
+Before marking the debrief process as done:
+
+- [ ] Topline metrics dashboard is accessible in PostHog (or equivalent)
+- [ ] Funnel events are correctly instrumented and visible in the analytics tool
+- [ ] KPI formulas are documented and calculated automatically where possible
+- [ ] Debrief is run on a consistent cadence (daily or weekly)
+- [ ] Action items from debriefs are tracked and reviewed in the next period

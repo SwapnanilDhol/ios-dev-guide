@@ -160,3 +160,17 @@ App/
     ├── AppEnvironment.swift       ← debug/release/testing flags
     └── DeviceInfoService.swift    ← Analytics global params
 ```
+
+---
+
+## Checklist
+
+Before marking architecture as done in a new project:
+
+- [ ] `AppDelegate` is ≤150 lines and only orchestrates `setup()`
+- [ ] Every manager follows `Manager.shared.start()` and is called from a single `setup()` method
+- [ ] `AppCoordinator` exists as a singleton and owns the root window / `UISplitViewController`
+- [ ] Feature modules have their own coordinators conforming to the `Coordinator` protocol
+- [ ] `AppAppearanceManager` encapsulates all UI appearance configuration
+- [ ] `NotificationManager` exists and sets the `UNUserNotificationCenter` delegate
+- [ ] No single class has more than 5 responsibilities

@@ -184,3 +184,20 @@ extension ProManager: PurchasesDelegate {
 
 - The entitlement name (e.g., `"proAccess"`) must match **exactly** what is configured in App Store Connect — case-sensitive
 - If using an App Group for widgets/watch, sync `isProEnabled` to `UserDefaults.shared` (App Group suite)
+
+---
+
+## Checklist
+
+Before marking RevenueCat + SwapProKit integration as done in a new project:
+
+- [ ] `ProManager` exists as a `@MainActor` singleton
+- [ ] `Purchases.configure(with:)` uses the correct RevenueCat API key
+- [ ] `SwapProManager.shared.delegate` is set **before** calling `SwapProManager.shared.start()`
+- [ ] `SwapProConfiguration` entitlement name matches App Store Connect exactly
+- [ ] `isProEnabled` is dual-written to `UserDefaults.standard` and `UserDefaults.shared` (App Group)
+- [ ] All `SwapProDelegate` methods are implemented (purchase, restore, error)
+- [ ] All delegate methods use `nonisolated` + `Task { @MainActor in }`
+- [ ] `PurchasesDelegate` is set to receive subscription state updates outside the app
+- [ ] Purchase lifecycle events are logged to `AppAnalyticsManager`
+- [ ] Sandbox purchase and restore flows have been tested end-to-end

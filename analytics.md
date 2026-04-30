@@ -192,3 +192,20 @@ For each screen, verify a `screen_did_open` event exists.
 2. Add the `case` clause in `rawValue` returning a kebab-case string
 3. Add the `case` clause in `parameters` returning associated values as a `String` dictionary (or `nil`)
 4. Call it via `AppAnalyticsManager.shared.logEvent(event: .yourEvent(...))`
+
+---
+
+## Checklist
+
+Before marking analytics as done in a new project:
+
+- [ ] `AppEvent` enum exists with `AnalyticsEvent` conformance
+- [ ] `rawValue` explicitly returns kebab-case strings for every case (no `default` fallback)
+- [ ] `parameters` returns `[String: String]?` for every case (or `nil`)
+- [ ] No `Error` types are used as associated values (converted to `String`)
+- [ ] `AppAnalyticsManager` registers at least `FirebaseLogger` and `TelemetryLogger`
+- [ ] Automatic screen capture is disabled in PostHog (or equivalent)
+- [ ] Every major screen emits an explicit `screen_did_open` event
+- [ ] `SwapProDelegate.didThrowError` is wired to `proScreenLoadFailed`
+- [ ] All conversion points (purchase, restore, ad impressions) have corresponding events
+- [ ] A periodic analytics audit is scheduled to find gaps

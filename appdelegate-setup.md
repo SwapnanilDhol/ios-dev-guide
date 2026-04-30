@@ -86,3 +86,18 @@ private func setup() {
 - [ ] Pro purchase/restore flow works (test in sandbox)
 - [ ] Ads display for non-pro users
 - [ ] Deep links open correct screen
+
+---
+
+## Checklist
+
+Before marking app launch setup as done in a new project:
+
+- [ ] `AppDelegate` is ≤150 lines and only calls `setup()`
+- [ ] App Group is created and `UserDefaults(suiteName:)` returns non-nil
+- [ ] All required SPM dependencies are added (SwapFoundationKit, SwapProKit, RevenueCat, GoogleMobileAds, Firebase, TelemetryDeck)
+- [ ] `setup()` follows the correct bootstrap order: lifecycle → analytics → core business → ads → notifications → UI appearance → sync
+- [ ] `ProManager.start()` is called after analytics but before ads
+- [ ] `AppAnalyticsManager.shared.start()` is called after `FirebaseApp.configure()`
+- [ ] No `#available(iOS X, *)` guards exist for iOS 18+ minimum targets
+- [ ] All `@MainActor` and `nonisolated` concurrency rules are applied to delegates

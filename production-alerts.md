@@ -51,3 +51,17 @@ When adding new events that need monitoring:
 3. Create PostHog alert on the insight with appropriate threshold
 4. Subscribe owning engineer/channel
 5. Document in this file: event name, insight short ID, alert ID, subscribed users
+
+---
+
+## Checklist
+
+Before marking production alerts as done for an app:
+
+- [ ] At least one critical alert is configured for paywall / pro screen load failures
+- [ ] At least one critical alert is configured for backend / core feature failures
+- [ ] Alerts use a structured `error_category` field for threshold targeting
+- [ ] Alert thresholds have been validated against one full week of production data
+- [ ] Owning engineer or channel is subscribed to alert notifications
+- [ ] Every alert is documented with event name, insight ID, alert ID, and subscribers
+- [ ] Alert volume is reviewed monthly and tuned to reduce noise

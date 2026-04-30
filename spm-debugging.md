@@ -45,3 +45,16 @@ rm -rf YourProject.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.re
 # Then rebuild
 xcodebuild -resolvePackageDependencies
 ```
+
+---
+
+## Checklist
+
+Before marking SPM and build health as done:
+
+- [ ] A clean build succeeds after deleting stale files (verify `Removed stale file` notes)
+- [ ] Newly added packages resolve correctly and appear in `Package.resolved`
+- [ ] No `#if canImport(...)` guards are used in app targets (wrapper-only architecture)
+- [ ] Archive build succeeds, not just Debug/simulator builds
+- [ ] DerivedData reset procedure is documented for the team
+- [ ] Package platform versions in `Package.swift` match the app's minimum iOS version

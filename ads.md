@@ -180,3 +180,18 @@ If the app target has direct imports of `GoogleMobileAds` or `SwapProKitAdMob` w
 3. All third-party SDK logic lives in SwapFoundationKit's `#if` blocks
 4. `AdsManager` and `AdaptiveBannerAdView` are always callable from app code
 5. `AdsManager.shared.start()` must be called on the main actor
+
+---
+
+## Checklist
+
+Before marking ad integration as done in a new project:
+
+- [ ] No app target file imports `GoogleMobileAds`, `RevenueCatAdMob`, or `SwapProKitAdMob`
+- [ ] `AppAdsManager` exists and configures `AdsConfiguration` with correct ad unit IDs
+- [ ] `isEligibleToShowAds` gates ads behind `!ProManager.shared.isProEnabled`
+- [ ] `preloadOnStart` includes at least `[.interstitial]`
+- [ ] Banner ads use `AdaptiveBannerAdView()` from SwapFoundationKit
+- [ ] Interstitial presentation uses `await AdsManager.shared.presentInterstitial()` before add/create actions
+- [ ] Ad events (impression, click) are wired to `AppAnalyticsManager`
+- [ ] Both Debug and Release builds archive successfully without `canImport` errors

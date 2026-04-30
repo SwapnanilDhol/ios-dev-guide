@@ -51,3 +51,17 @@ appId: com.yourcompany.yourapp
 ## CI Integration
 
 Add to CI pipeline after archive step to validate critical flows before release.
+
+---
+
+## Checklist
+
+Before marking Maestro UI automation as done:
+
+- [ ] Maestro is installed (`brew install maestro`) and `maestro --version` works
+- [ ] At least one critical user flow is automated (e.g., launch → home → create item)
+- [ ] Flows use element IDs or stable text selectors (not brittle coordinates)
+- [ ] `assertVisible` checks are included after navigation actions
+- [ ] Screenshot steps are added for visual regression tracking
+- [ ] Flows run successfully on the target simulator / device
+- [ ] Maestro tests are integrated into CI and run after the archive step

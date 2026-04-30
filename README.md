@@ -15,26 +15,39 @@ Three rules:
 
 ---
 
-## Directory Structure
+## Pages
 
-```
-ios-dev-guide/
-├── README.md                    ← You are here
-├── patterns/                    ← Architectural principles
-│   ├── architecture.md          ← AppDelegate, coordinators, managers
-│   ├── concurrency.md           ← @MainActor, nonisolated, Task propagation
-│   ├── ads.md                   ← AdsManager, wrapper-only pattern
-│   ├── analytics.md             ← Logger bridge, AppEvent, audit
-│   └── revenuecat.md            ← ProManager, SwapProDelegate wiring
-├── reference/                   ← Copy-pasteable snippets
-│   ├── appdelegate-checklist.md ← Launch setup checklist
-│   └── snippets.md              ← Common code patterns
-└── ops/                         ← Operational runbooks (app-specific)
-    ├── debrief.md               ← Daily/weekly report format
-    ├── alerts-passmaker.md      ← PostHog alert config (PassMaker)
-    ├── maestro-testing.md       ← UI automation with Maestro
-    └── spm-debugging.md        ← SPM/DerivedData troubleshooting
-```
+Every page below ends with a **checklist** of things to verify before marking that topic as done in a new project.
+
+### Patterns
+
+| Page | What it covers |
+|------|---------------|
+| [Architecture](architecture.md) | AppDelegate, coordinators, managers, file structure |
+| [Concurrency](concurrency.md) | `@MainActor`, `nonisolated`, Task propagation, cancellation |
+| [Ads](ads.md) | AdsManager, wrapper-only pattern, banner & interstitial setup |
+| [Analytics](analytics.md) | Logger bridge, AppEvent, screen tracking, audit |
+| [RevenueCat](revenuecat.md) | ProManager, SwapProDelegate wiring, entitlements |
+| [Update Available Banner](update-available-banner.md) | Update checks + settings banner wiring |
+
+### Reference
+
+| Page | What it covers |
+|------|---------------|
+| [AppDelegate Setup](appdelegate-setup.md) | Launch setup checklist, bootstrap order, verification |
+| [Code Snippets](code-snippets.md) | Common reusable snippets for every project |
+
+### Operations
+
+| Page | What it covers |
+|------|---------------|
+| [Analytics Debrief](analytics-debrief.md) | Daily/weekly report format and KPIs |
+| [Production Alerts](production-alerts.md) | PostHog alert config and operating guidance |
+| [App Store Screenshots](app-store-screenshots.md) | Screenshot pipeline runbook |
+| [ASC Submission](asc-submission.md) | App Store Connect submission with the ASC CLI |
+| [Maestro Testing](maestro-testing.md) | UI automation with Maestro |
+| [SPM Debugging](spm-debugging.md) | SPM, DerivedData & package cache troubleshooting |
+| [Screenshot Automation Handoff](screenshot-automation-handoff.md) | Full operational handoff template for screenshot work |
 
 ---
 
@@ -119,3 +132,33 @@ Test Release builds with `xcodebuild -archive` before shipping. Debug builds and
 | `SFKButton`, `GlassEffectContainer`, `ToastManager` | `SwapFoundationKit` |
 | `HapticsHelper`, `Logger`, `AppLinkOpener` | `SwapFoundationKit` |
 | `AppEnvironment`, `DeviceInfoService` | App-defined |
+
+---
+
+## Using This Guide in Other Projects
+
+This repo includes a helper script so any AI agent working on your other iOS projects can automatically read `AGENTS.md` and follow the patterns here.
+
+### Quick start
+
+From inside any other project:
+
+```bash
+~/Desktop/ios-dev-guide/link-guide.sh
+```
+
+This symlinks `AGENTS.md` (and the common pages) into the current project. Agents that open the project will read `AGENTS.md` automatically and know which file to open for every problem.
+
+### Manual symlink (one file only)
+
+```bash
+ln -s ~/Desktop/ios-dev-guide/AGENTS.md AGENTS.md
+```
+
+### Unlink when you don't need it
+
+```bash
+rm AGENTS.md ads.md analytics.md architecture.md concurrency.md revenuecat.md update-available-banner.md code-snippets.md appdelegate-setup.md spm-debugging.md
+```
+
+These are just symlinks — removing them does not touch the real files in `ios-dev-guide`.

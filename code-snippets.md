@@ -197,3 +197,18 @@ case aiDidFail(error: Error)
 // GOOD — convert to String
 case aiDidFail(errorMessage: String)
 ```
+
+---
+
+## Checklist
+
+Before marking shared utilities as done in a new project:
+
+- [ ] `AppEnvironment` enum exists with `.debug`, `.release`, and `.testing` cases
+- [ ] `DeviceInfoService.properties()` returns all required analytics parameters
+- [ ] `UserDefaultsKey` enum conforms to `UserDefaultKeyProtocol`
+- [ ] `SFKButton`, `GlassEffectContainer`, `ToastManager`, `AppLinkOpener`, `Logger`, and `HapticsHelper` are used from SwapFoundationKit
+- [ ] `WidgetCenter.shared.reloadAllTimelines()` is called after data mutations
+- [ ] `BackupService` is configured and tested for the app's data model
+- [ ] `FileExportService` and `FileImportService` are wired to the correct UI flows
+- [ ] No `Error` types are passed as associated values in analytics events

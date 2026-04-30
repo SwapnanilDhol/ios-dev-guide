@@ -121,3 +121,15 @@ NotificationCenter.default.publisher(for: .init(CDChangeNotification))
     }
     .store(in: &cancellables)
 ```
+
+---
+
+## Checklist
+
+Before marking concurrency patterns as done in a new project:
+
+- [ ] All delegate classes that touch UI are marked `@MainActor`
+- [ ] Every `nonisolated` delegate callback uses `Task { @MainActor in }` before touching main-actor state
+- [ ] Lifecycle methods (`applicationWillTerminate`, `applicationDidEnterBackground`) use `nonisolated` + `Task { @MainActor in }`
+- [ ] Async loops check `Task.isCancelled` before continuing work
+- [ ] `NotificationCenter` observers in ViewModels use `.debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)`
