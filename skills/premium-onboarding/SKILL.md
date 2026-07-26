@@ -41,6 +41,8 @@ Decision: prefer `wrap_sfk` — SFK owns progress/typography/cards/buttons; the 
 7. Previews use `*PreviewSupport` with explicit deps — no fake coordinator inits
 8. Full-screen onboarding exits through one opaque hosting surface; animated child
    views never bypass the coordinator with production environment dismissal
+9. Timed progress and staged-card haptics share explicit animation phases, run in
+   cancellable tasks, and cannot replay because SwiftUI recomputed a view
 
 ## Workflow
 
@@ -52,7 +54,9 @@ Decision: prefer `wrap_sfk` — SFK owns progress/typography/cards/buttons; the 
 6. Add the single-layer hosting-controller dismissal pattern from playbook §7.1
    when the flow contains continuously rendered or UIKit-backed content.
 7. Add analytics funnel events and accessibility identifiers.
-8. Walk the playbook migration checklist and definition of done.
+8. Synchronize processing pulses and staged-card impacts with authored phases;
+   collapse the sequence for Reduce Motion.
+9. Walk the playbook migration checklist and definition of done.
 
 ## Checklist
 

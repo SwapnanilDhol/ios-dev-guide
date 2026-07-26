@@ -664,6 +664,23 @@ Core Haptics is not universally available. Fall back to:
 
 Prepare generators before the moment they are needed. Do not stack unrelated button haptics on top of the animation score.
 
+### Timed progress and staged card reveals
+
+Short processing interstitials may use a restrained rising pulse sequence—typically
+three or four impacts spaced roughly 350–500 ms apart—to communicate ongoing work.
+The impacts should become slightly stronger as progress advances, then stop before
+navigation. This is authored pacing, not a render-driven progress callback.
+
+When multiple cards split, fan, or spring out of one composition, model the reveal
+as an integer phase (or equivalent enum). Advance one phase per card and fire that
+card's subtle impact in the same cancellable task immediately before changing the
+phase. Do not trigger haptics from `body`, per-frame animation values, or generic
+`onChange` observers; SwiftUI recomputation must not replay the sequence.
+
+Use `.task` or an explicitly owned `Task`, handle cancellation from every sleep,
+and keep delayed haptics from surviving dismissal. Reduce Motion should collapse
+the choreography to one stack impact or a shorter, quieter progress sequence.
+
 ### Design test
 
 Test the score on a physical device. Simulator behavior cannot validate haptic quality. If the pattern feels buzzy, reduce transient count before reducing the main blast; a clear physical sentence is better than constant vibration.
@@ -825,6 +842,10 @@ Use compact, vertically stacked cards resembling current iOS notifications:
 
 Do not create a horizontal carousel. Notifications arrive as a vertical stack. Windfall begins all cards at the center, then bursts them to upper, center, and lower offsets with small rotations and a lightly staggered spring.
 
+Give the reveal an explicit phase per card. Fire one subtle, increasing impact as
+each card begins moving, keeping visual and tactile timing in the same cancellable
+task. With Reduce Motion, reveal the static stack with at most one impact.
+
 ### Content
 
 Use notification types the app can actually send. Inspect the app's notification service and reuse its categories and tone. Examples include:
@@ -861,6 +882,9 @@ A processing step is pacing, not a fake claim. Use it only when the pause helps 
 - Make the sequence cancellable.
 - Advance exactly once.
 - Use restrained rings, progress, or redacted product UI.
+- A few rising impacts may reinforce visible progress; space them deliberately and
+  stop them before the navigation transition.
+- Drive the pulse schedule from one cancellable task, never from render updates.
 - Never block the main actor with synchronous work.
 
 ### Account preview
@@ -967,6 +991,8 @@ Accessibility is a parallel design mode, not a late audit.
 - page transitions crossfade;
 - CTA morph uses a short fade/scale;
 - notification burst becomes a static stack or short fade;
+- staged notification haptics collapse to at most one impact;
+- processing haptics use a shorter, quieter sequence;
 - timed steps remain understandable.
 
 ### VoiceOver
@@ -1226,8 +1252,9 @@ Build in this order so foundational mistakes do not spread:
 3. Add page transitions at both navigation layers.
 4. Blend ambient motion.
 5. Add Core Haptics and fallback.
-6. Add Reduce Motion behavior.
-7. Test on device.
+6. Synchronize processing pulses and staged-card impacts with explicit phases.
+7. Add Reduce Motion behavior.
+8. Test on device.
 
 ### Phase 7 — Instrumentation and rollout
 
@@ -1287,6 +1314,8 @@ Copy the architecture, not Windfall's finance content.
 - [ ] Ambient motion begins after settlement.
 - [ ] Root and setup page transitions both animate.
 - [ ] Haptic score matches visual timing.
+- [ ] Timed progress and staged-card haptics are task-driven and cancellable.
+- [ ] SwiftUI recomputation cannot replay entrance haptics.
 - [ ] Fallback haptics exist.
 - [ ] Reduce Motion has an intentional static design.
 
