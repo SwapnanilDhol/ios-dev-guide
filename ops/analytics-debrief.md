@@ -1,3 +1,5 @@
+> **Note:** This page may include worked examples from a specific app (e.g. PassMaker). Treat IDs/event names as templates — replace with the host app's PostHog project and funnel.
+
 # Daily/Weekly Debrief Format
 
 Run daily or weekly reports using this format. Pull data from PostHog MCP.

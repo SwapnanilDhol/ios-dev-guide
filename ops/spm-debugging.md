@@ -23,7 +23,7 @@ If a newly added SPM package shows as "not found" even though it's in `Package.r
 
 **Symptoms**: Works in Debug, fails in Release. Build succeeds but entire feature branches are compiled out.
 
-**Fix**: Use wrapper-only architecture — let the library handle conditional imports. See `patterns/ads.md`.
+**Fix**: Use wrapper-only architecture — let the library handle conditional imports. See [`../stack/ads.md`](../stack/ads.md).
 
 ### Build Succeeds But App Crashes
 

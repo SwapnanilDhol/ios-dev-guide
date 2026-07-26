@@ -1,3 +1,5 @@
+> **Note:** This page may include worked examples from a specific app (e.g. PassMaker). Treat IDs/event names as templates — replace with the host app's PostHog project and funnel.
+
 # PassMaker PostHog Alert Configuration
 
 Two production-critical alerts are configured in PostHog project `PassMaker` (`387590`).

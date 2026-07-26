@@ -1,3 +1,5 @@
+> **Note:** Operational handoff template. Paths and product names in the body are examples — adapt to the host app and `skills/generate-app-store-screenshots`.
+
 # SubscriptionTracker Screenshot Automation Handoff
 
 This is a full operational handoff for `SubscriptionTracker` screenshot generation and UI automation work done on Apr 24, 2026.
