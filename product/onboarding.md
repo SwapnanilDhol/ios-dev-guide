@@ -320,6 +320,64 @@ let animation = reduceMotion
     )
 ```
 
+### 7.1 Dismiss the full-screen surface as one layer
+
+A full-screen SwiftUI onboarding can contain continuously rendered content such as
+`TimelineView`, `Canvas`, animated materials, or UIKit-backed previews. During an
+interactive-looking UIKit dismissal, those live render layers can update one frame
+after the hosting controller starts moving. The result is a transparent-looking
+sheet: the background moves away while cards, text, or tiles appear to remain over
+the destination until the next render pass.
+
+Treat presentation opacity and dismissal integrity as coordinator responsibilities:
+
+1. Present a dedicated hosting controller with `.fullScreen`.
+2. Give the controller view an explicit semantic background and set `isOpaque = true`.
+3. Route every exit path through one coordinator/host method. Do not let an animated
+   child view call `@Environment(\.dismiss)` directly in production.
+4. Immediately before dismissal, lay out the host, snapshot its complete view, add
+   the snapshot above the live SwiftUI hierarchy, and hide the live subviews.
+5. Ask UIKit to dismiss the hosting controller normally. UIKit now animates one
+   stable bitmap surface instead of independently updating SwiftUI render layers.
+6. Keep a weak presentation bridge so the SwiftUI root can request this behavior
+   without owning its hosting controller. Retain environment dismissal only as a
+   preview or non-UIKit fallback.
+
+Reference shape:
+
+```swift
+@MainActor
+final class OnboardingHostingController<Content: View>: UIHostingController<Content> {
+    private var isDismissingAsSingleLayer = false
+
+    func dismissAsSingleLayer() {
+        guard !isDismissingAsSingleLayer else { return }
+        isDismissingAsSingleLayer = true
+
+        view.layoutIfNeeded()
+        let liveSubviews = view.subviews
+
+        if let snapshot = view.snapshotView(afterScreenUpdates: false) {
+            snapshot.frame = view.bounds
+            snapshot.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            snapshot.isUserInteractionEnabled = false
+            snapshot.accessibilityElementsHidden = true
+
+            UIView.performWithoutAnimation {
+                view.addSubview(snapshot)
+                liveSubviews.forEach { $0.isHidden = true }
+            }
+        }
+
+        dismiss(animated: true)
+    }
+}
+```
+
+Do not try to solve this with `.drawingGroup()`, `.compositingGroup()`, or a second
+SwiftUI exit animation. Those can change rendering cost or create competing motion,
+but they do not guarantee that UIKit dismisses the modal as one visual surface.
+
 ---
 
 ## 8. Setup shell and footer
@@ -1105,6 +1163,15 @@ Cause: marketing impression and setup completion share one flag.
 
 Fix: store independent facts and resolve a presentation intent.
 
+### Content remains after the modal starts dismissing
+
+Cause: continuously rendered SwiftUI layers update independently while UIKit moves
+the hosting controller, or a child view bypasses the coordinator with environment
+dismissal.
+
+Fix: use the single-layer hosting-controller dismissal pattern in §7.1 and route
+every production exit through it.
+
 ---
 
 ## 24. Recommended implementation order
@@ -1205,6 +1272,7 @@ Copy the architecture, not Windfall's finance content.
 - [ ] Marketing shown and onboarding complete are separate flags.
 - [ ] Launch matrix is tested.
 - [ ] Coordinator owns presentation and dismissal.
+- [ ] Full-screen host is opaque and all exits use single-layer dismissal.
 - [ ] Setup uses enum-driven CTA state.
 - [ ] Only steps that need scrolling scroll.
 - [ ] Async sequences are cancellable.
@@ -1241,6 +1309,7 @@ Copy the architecture, not Windfall's finance content.
 - [ ] Notification states pass.
 - [ ] Physical-device haptics pass.
 - [ ] Clean install, interrupted setup, returning user, and debug entry pass.
+- [ ] Frame-by-frame dismissal shows one full-width surface with no orphaned content.
 - [ ] Full app build succeeds.
 
 ---
@@ -1264,6 +1333,8 @@ The onboarding is ready only when:
 - Reduce Motion, VoiceOver, and Dynamic Type are usable;
 - the old flow and duplicate debug entry are removed;
 - the production coordinator is the single presentation path;
+- the full-screen host dismisses as one opaque layer with no cards, text, or animated
+  tiles surviving into a later render pass;
 - tests pass and the app builds successfully.
 
 ---
@@ -1298,4 +1369,4 @@ The reusable principle is consistent throughout: share infrastructure and produc
 
 ---
 
-**Last updated:** 2026-07-25
+**Last updated:** 2026-07-26

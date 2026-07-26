@@ -39,6 +39,8 @@ Decision: prefer `wrap_sfk` — SFK owns progress/typography/cards/buttons; the 
 5. Shared footer via bottom safe-area bar + `SFKButton`; specialized steps may own their own CTA
 6. Ask for notifications / purchase only after value is visible
 7. Previews use `*PreviewSupport` with explicit deps — no fake coordinator inits
+8. Full-screen onboarding exits through one opaque hosting surface; animated child
+   views never bypass the coordinator with production environment dismissal
 
 ## Workflow
 
@@ -47,9 +49,14 @@ Decision: prefer `wrap_sfk` — SFK owns progress/typography/cards/buttons; the 
 3. Implement dual flags + presentation intent matrix from the playbook.
 4. Build the shared setup shell + footer; specialize only when permission/monetization/timing differ.
 5. Wire coordinator delegate methods for complete / dismiss / nested entry / pro sheet.
-6. Add analytics funnel events and accessibility identifiers.
-7. Walk the playbook migration checklist and definition of done.
+6. Add the single-layer hosting-controller dismissal pattern from playbook §7.1
+   when the flow contains continuously rendered or UIKit-backed content.
+7. Add analytics funnel events and accessibility identifiers.
+8. Walk the playbook migration checklist and definition of done.
 
 ## Checklist
 
-Use the checklists at the bottom of [`product/onboarding.md`](../../product/onboarding.md) (migration + DoD sections). Do not mark onboarding done until those pass.
+Use the checklists at the bottom of [`product/onboarding.md`](../../product/onboarding.md)
+(migration + DoD sections). Verify final and marketing-only dismissal frame by frame;
+an accessibility-tree transition alone cannot detect orphaned render layers. Do not
+mark onboarding done until those checks pass.
