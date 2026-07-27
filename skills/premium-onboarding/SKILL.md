@@ -38,7 +38,8 @@ Decision: prefer `wrap_sfk` — SFK owns progress/typography/cards/buttons; the 
 4. Coordinators own sheets (account entry, system settings, pro paywall)
 5. Shared footer via bottom safe-area bar + `SFKButton`; specialized steps may own their own CTA
 6. Ask for notifications / purchase only after value is visible
-7. Previews use `*PreviewSupport` with explicit deps — no fake coordinator inits
+7. Every screen lives in its own file and owns its named preview state matrix;
+   `*PreviewSupport` injects explicit deps into the real shell—no fake coordinator inits
 8. Full-screen onboarding exits through one opaque hosting surface; animated child
    views never bypass the coordinator with production environment dismissal
 9. Timed progress and staged-card haptics share explicit animation phases, run in
@@ -56,7 +57,10 @@ Decision: prefer `wrap_sfk` — SFK owns progress/typography/cards/buttons; the 
 7. Add analytics funnel events and accessibility identifiers.
 8. Synchronize processing pulses and staged-card impacts with authored phases;
    collapse the sequence for Reduce Motion.
-9. Walk the playbook migration checklist and definition of done.
+9. Add a side-effect-free preview gallery: finite enum cases; empty/partial/complete
+   selections; text empty/typed/success; async idle/loading/success/failure; and
+   permission not-asked/denied/granted. Freeze motion phases instead of running them.
+10. Walk the playbook migration checklist and definition of done.
 
 ## Checklist
 

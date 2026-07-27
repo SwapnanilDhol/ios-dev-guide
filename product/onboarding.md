@@ -1041,16 +1041,35 @@ Copy should be concise enough to survive translation. A two-line English headlin
 
 ### Compiling previews
 
-Every view must have an explicit preview dependency graph through an `OnboardingPreviewSupport` factory. Provide:
+Every screen implementation lives in its own Swift file, and that file owns all
+named `#Preview` declarations for the states the screen renders. Use an
+`OnboardingPreviewSupport` factory to inject deterministic state into the real
+production shell; previews must include the actual progress header, safe areas,
+scroll container, pinned CTA, and screen background.
 
-- light and dark marketing previews;
-- representative selection states;
-- notification permission states;
-- loading and completed demo states;
-- small and large device previews;
-- Reduce Motion where practical.
+Treat the preview gallery as an executable state inventory:
+
+- finite enums: preview every visually distinct case;
+- text entry: empty, representative typed value, validation error when present,
+  and submit success/confirmation;
+- single selection: empty and selected;
+- multi-selection: empty, one selected, and a representative multi-selected set;
+- async work: idle, loading, success, and failure when each state exists;
+- permissions: not asked, denied/restricted, and granted;
+- test actions: ready, sending, succeeded/queued, and failed;
+- result screens: empty/fallback and each supported result shape;
+- authored motion: freeze each meaningful phase and include a settled state.
+
+Also provide light/dark, small/large device, large Dynamic Type, and Reduce Motion
+variants where they expose layout or behavior risk. Do not multiply previews
+when a trait does not materially change the screen.
 
 Do not add parameterless production view-model initializers that fabricate coordinators.
+Do not call live permission APIs, persistence, analytics, notification
+schedulers, cameras, haptics, auto-advance tasks, or network services from a
+preview. Model preview mode explicitly and make the owning side-effect boundary
+return early. A preview fixture should be declarative data, not a script that
+waits until it reaches the desired state.
 
 ### Unit tests
 
