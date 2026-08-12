@@ -29,6 +29,12 @@ final class ProManager: NSObject {
     private override init() { }
     private let hapticsHelper = HapticsHelper()
 
+    @UserDefault(UserDefaultsKey.isProEnabled, default: false)
+    private var standardIsProEnabled: Bool
+
+    @SharedUserDefaults(UserDefaultsKey.isProEnabled, default: false)
+    private var sharedIsProEnabled: Bool
+
     func start() {
         #if DEBUG
         Purchases.logLevel = .debug
@@ -47,7 +53,7 @@ final class ProManager: NSObject {
     }
 
     public var isProEnabled: Bool {
-        UserDefaults.shared.bool(for: UserDefaultsKey.isProEnabled)
+        standardIsProEnabled || sharedIsProEnabled
     }
 
     private func setupSwapPro() {
@@ -61,15 +67,15 @@ final class ProManager: NSObject {
 
     private func updateProEnabled(from customerInfo: CustomerInfo) {
         let isProEnabled = !customerInfo.entitlements.active.isEmpty
-        UserDefaults.standard.set(isProEnabled, for: UserDefaultsKey.isProEnabled)
-        UserDefaults.shared.set(isProEnabled, for: UserDefaultsKey.isProEnabled)  // App Group
+        standardIsProEnabled = isProEnabled
+        sharedIsProEnabled = isProEnabled
     }
 }
 ```
 
 **Key rules**:
 - `SwapProManager.shared.delegate` must be set **before** calling `SwapProManager.shared.start()`
-- Always dual-write to both `UserDefaults.standard` and `UserDefaults.shared` (App Group) for widget/watch access
+- Declare local state with `@UserDefault` and app-group state with `@SharedUserDefaults`; never expose or construct the shared store in the host app
 
 ---
 
@@ -183,7 +189,7 @@ extension ProManager: PurchasesDelegate {
 ## Entitlement Requirements
 
 - The entitlement name (e.g., `"proAccess"`) must match **exactly** what is configured in App Store Connect — case-sensitive
-- If using an App Group for widgets/watch, sync `isProEnabled` to `UserDefaults.shared` (App Group suite)
+- If using an App Group for widgets/watch, sync `isProEnabled` through `@SharedUserDefaults`; SFK resolves the suite from configured `AppMetaData`
 
 ---
 
@@ -195,7 +201,7 @@ Before marking RevenueCat + SwapProKit integration as done in a new project:
 - [ ] `Purchases.configure(with:)` uses the correct RevenueCat API key
 - [ ] `SwapProManager.shared.delegate` is set **before** calling `SwapProManager.shared.start()`
 - [ ] `SwapProConfiguration` entitlement name matches App Store Connect exactly
-- [ ] `isProEnabled` is dual-written to `UserDefaults.standard` and `UserDefaults.shared` (App Group)
+- [ ] `isProEnabled` is dual-written through `@UserDefault` and `@SharedUserDefaults`
 - [ ] All `SwapProDelegate` methods are implemented (purchase, restore, error)
 - [ ] All delegate methods use `nonisolated` + `Task { @MainActor in }`
 - [ ] `PurchasesDelegate` is set to receive subscription state updates outside the app

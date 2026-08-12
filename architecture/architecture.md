@@ -88,6 +88,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
 All services follow `Manager.shared.start()`, called from a single `setup()` — never scatter initialization.
 
+`AppLifecycleHandler.shared.start()` owns the standard SFK bootstrap: it synchronously installs the host app's `AppMetaData`, then starts SFK services asynchronously. Keep this shape consistent across apps; do not introduce per-app `FoundationKitConfigurator` types.
+
 ## Coordinators
 
 - **AppCoordinator** (singleton) owns the root window / split view. It should **not** conform to SFK's module `Coordinator` protocol.

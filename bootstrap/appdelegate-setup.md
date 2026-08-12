@@ -36,6 +36,8 @@ Use this checklist when setting up a new iOS app or auditing an existing one.
 
 ## Launch Bootstrap Order
 
+Every app uses `AppLifecycleHandler.shared.start()` as its first bootstrap call. That method synchronously installs the app's `AppMetaData` into SwapFoundationKit before starting SFK's asynchronous services; do not add a separate `FoundationKitConfigurator` type.
+
 ```swift
 private func setup() {
     // 1. Lifecycle
