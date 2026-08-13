@@ -1,100 +1,96 @@
 ---
 name: two-bundle-id-workflow
 description: >-
-  Generic two-bundle-ID workflow for keeping development installs and
-  production installs isolated. Use when changing bundle identifiers, build
-  configurations, app groups, entitlements, widgets/extensions, display names,
-  app icons, or any feature that could accidentally mix development data with
-  live app data.
+  Deterministically audit, bootstrap, migrate, and verify isolated iOS
+  development and production identities across app targets, widgets,
+  extensions, app groups, plists, URL schemes, services, and Codemagic.
+  Use when creating or reviewing a two-bundle-ID setup for a new or existing
+  iOS app, or when preparing side-by-side development and App Store installs.
 ---
 
-# Two Bundle ID Workflow
+# Two-bundle-ID workflow
 
-Read `bootstrap/two-bundle-id.md` in this kit, then any host-app example under `examples/`.
-For implementation work, also read [references/implementation-checklist.md](references/implementation-checklist.md) before editing files.
+Use this skill when a development build must coexist with the production App
+Store build. Do not start by editing the project. First generate an evidence
+report, then make paired changes, then run the verifier.
 
-Use this skill whenever the task touches any of these:
+## Non-negotiable model
 
-- `PRODUCT_BUNDLE_IDENTIFIER`
-- `.xcconfig` build configuration wiring
-- app groups or entitlements
-- widget or extension bundle IDs
-- debug vs production display names or app icons
-- environment-aware storage, backups, or shared containers
+Use one app target with three configurations:
 
-## Goal
+| Configuration | Bundle identity | Distribution |
+|---|---|---|
+| `Debug` | development (`com.example.app.dev`) | local Xcode |
+| `Preview` | the same development ID | Codemagic ad hoc, registered devices |
+| `Release` | production (`com.example.app`) | TestFlight/App Store |
 
-Preserve the app's safety rule:
+`Preview` is Release-optimized but has the development identity and a
+`DEVELOPMENT`/`PREVIEW` compilation condition. TestFlight must always use
+`Release`; a preview must never upload to Apple, create a release branch, or
+create a tag.
 
-- Development work must never share the same app identity or shared container as the production install.
+The same pairing applies to every companion target:
 
-## Reference Mapping
+```text
+app.dev              ↔ widget.dev / share-extension.dev
+app                  ↔ widget / share-extension
+group.*.dev          ↔ development companion entitlements
+group.*              ↔ production companion entitlements
+```
 
-| Aspect | Debug / Dev | Release / Prod |
-|--------|-------------|----------------|
-| App bundle ID | `com.example.app.dev` | `com.example.app` |
-| Display name | `App Dev` | `App` |
-| App group | `group.com.example.app.dev` | `group.com.example.app` |
-| Backup directory | `data_dev` | `data` |
-| Compile flag | `DEVELOPMENT` | none |
+## Required sequence
 
-## Common Source Files
+1. Read the host `AGENTS.md` and the relevant references below.
+2. Run `scripts/discover-identities.sh /path/to/app --output /tmp/app-identities.json`.
+3. Treat the report as facts. Do not guess target names, bundle IDs, groups,
+   schemes, extensions, or service behavior.
+4. For a new app, run `scripts/bootstrap-identity-files.sh` into a new output
+   directory and wire the generated files into Xcode.
+5. For an old app, preserve the Release identity and data paths; add the
+   development identity and Preview configuration additively.
+6. Apply the file-by-file checklist in `references/implementation-checklist.md`.
+7. Make explicit service decisions using `references/service-isolation.md`.
+8. Run `scripts/verify-identities.sh /path/to/app`. It must pass before any
+   signing or CI work proceeds.
+9. Configure Apple App IDs, app groups, companion IDs, capabilities, and
+   registered-device profiles. Never silently reuse production entitlements.
+10. Configure Codemagic: `device-preview` uses `Preview`; TestFlight uses
+    `Release`.
+11. Build and inspect all three configurations. Run
+    `scripts/verify-built-products.sh` against the resulting app bundles.
+12. Install the development and production apps together and execute the
+    host-specific smoke tests. Record evidence in the app runbook.
 
-- `Debug.xcconfig` and `Release.xcconfig`
-- app and extension entitlements
-- app and extension target build settings
-- `Info.plist` or per-configuration plist files
-- a central runtime configuration type
-- shared-container helpers
-- widget or extension container helpers
+## Deterministic tooling
 
-## Invariants
+The scripts are intentionally conservative:
 
-1. Debug and release bundle IDs must stay different.
-2. Debug and release app groups must stay different.
-3. Extensions/widgets must follow the same split as the main app.
-4. Environment-dependent app behavior should branch through `Configuration` and `#if DEVELOPMENT`.
-5. User-visible naming should come from bundle-driven configuration, not hardcoded app names.
-6. Any new shared storage or backup path must be checked for dev/prod isolation.
+- discovery is read-only and emits stable JSON;
+- verification exits non-zero with named failures;
+- bootstrap refuses to overwrite an existing output directory;
+- no script registers Apple identifiers, rotates secrets, deletes apps, or
+  changes production settings automatically;
+- build status and signing are decided by command exit codes and artifact
+  inspection, not model interpretation.
 
-## Workflow
+Read the variant references only when needed:
 
-1. Identify every place app identity is defined: xcconfig, entitlements, Info.plist, project target settings, extension target settings, runtime config helpers, and any strings derived from bundle ID.
-2. Read `references/implementation-checklist.md` and follow the file-by-file change list.
-3. Make paired debug and release changes together. Never update only one side unless the task explicitly removes the split.
-4. Confirm runtime helpers still return the correct app group, bundle-derived name, and storage paths.
-5. If adding a new extension or shared container, wire both dev and prod variants before considering the task complete.
-6. Update the local workflow documentation if the file layout or rules change.
-7. Verify that the development and production installs remain isolated.
+- [legacy-app-migration.md](references/legacy-app-migration.md)
+- [new-app-bootstrap.md](references/new-app-bootstrap.md)
+- [preview-configuration.md](references/preview-configuration.md)
+- [service-isolation.md](references/service-isolation.md)
+- [implementation-checklist.md](references/implementation-checklist.md)
 
-## Expected Edits
+## Low-cost execution
 
-In a normal implementation, expect to inspect or change all of these:
+Use a low-reasoning model for discovery, template application, deterministic
+checks, and repeated per-app migrations. Do not spend a reasoning model on
+waiting for Xcode, Codemagic, Apple processing, or artifact uploads. Escalate
+only when a verifier reports an unsupported capability, an ambiguous existing
+production identity, or project corruption.
 
-- debug and release `PRODUCT_BUNDLE_IDENTIFIER`
-- debug and release `CODE_SIGN_ENTITLEMENTS`
-- debug and release `INFOPLIST_FILE`
-- debug and release display-name wiring
-- app-group arrays inside entitlements
-- extension target bundle identifiers
-- extension target entitlements
-- Info.plist values that derive from the bundle identifier
-- runtime configuration helpers for app group, backup path, suite name, URL base, or feature gating
-- widget/shared-container helpers that infer environment from bundle identity
+## Completion gate
 
-## Output Standard
-
-When this skill is used for a real implementation, the resulting change should leave behind:
-
-- a working debug identity
-- a working production identity
-- matching companion target identities, if they exist
-- a single runtime configuration layer for environment-aware values
-- updated documentation of the workflow
-
-## Review Checklist
-
-- Does the debug build still install side-by-side with production?
-- Could any app-group, widget, or backup path accidentally point at production from debug?
-- Did any user-facing string hardcode the app name instead of using bundle-driven naming?
-- If the task added a new target or extension, did it get both debug and release identity wiring?
+Do not call an app complete unless the verifier passes, all companion targets
+are paired, the production settings match the pre-migration snapshot, both
+identities install side-by-side, and the app runbook contains the evidence.

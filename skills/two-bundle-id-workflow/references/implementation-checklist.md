@@ -1,206 +1,69 @@
-# Implementation Checklist
+# Implementation checklist
 
-Use this checklist when creating or auditing a two-bundle-ID workflow.
+Use this after discovery and before signing. Every item needs a file path or
+command output in the app's runbook.
 
-## 1. Build Configurations
+## Build configurations
 
-Confirm there are at least two build configurations:
+- [ ] `Debug`, `Preview`, and `Release` exist on the app target.
+- [ ] Debug and Preview use the same development `PRODUCT_BUNDLE_IDENTIFIER`.
+- [ ] Release retains the pre-migration production bundle ID exactly.
+- [ ] Preview is Release-optimized and defines `PREVIEW`/`DEVELOPMENT`.
+- [ ] Debug/Preview and Release have distinct display names, product names and
+      app icons.
+- [ ] `CODE_SIGN_ENTITLEMENTS` and `INFOPLIST_FILE` resolve per configuration.
+- [ ] `SWIFT_ACTIVE_COMPILATION_CONDITIONS` preserves `$(inherited)` where the
+      project requires inherited conditions.
 
-- `Debug`
-- `Release`
+## Companion targets
 
-Typical requirements:
+For every widget, Share Extension, notification service/content extension,
+watch target, App Intent extension, or other embedded target:
 
-- `Debug` defines a development identity
-- `Release` defines a production identity
-- both configurations map to the same app target unless the project intentionally uses separate targets
+- [ ] development and production bundle IDs are distinct;
+- [ ] Preview uses the development companion ID;
+- [ ] entitlements point to the matching app group and capabilities;
+- [ ] the target is embedded in the expected app configuration; and
+- [ ] no development companion points at a production app group.
 
-## 2. xcconfig Or Target Build Settings
+## Plists and identity-derived values
 
-Check each configuration for these settings:
+- [ ] `CFBundleIdentifier`, display name, name and version use build settings.
+- [ ] URL schemes are distinct or intentionally absent in development.
+- [ ] background-task identifiers derive from `$(PRODUCT_BUNDLE_IDENTIFIER)`.
+- [ ] associated domains, app links, document types and callback URLs are
+      reviewed for development routing.
+- [ ] extension point metadata remains valid for both identities.
 
-| Setting | Development example | Production example | Why it matters |
-|--------|----------------------|--------------------|----------------|
-| `PRODUCT_BUNDLE_IDENTIFIER` | `com.example.app.dev` | `com.example.app` | Defines app identity and container split |
-| `DISPLAY_NAME` or `INFOPLIST_KEY_CFBundleDisplayName` | `App Dev` | `App` | Makes the install visually distinct |
-| `ASSETCATALOG_COMPILER_APPICON_NAME` | `AppIcon-Dev` | `AppIcon` | Prevents confusion on-device |
-| `CODE_SIGN_ENTITLEMENTS` | `AppDev.entitlements` | `App.entitlements` | Points each build at the correct app-group file |
-| `INFOPLIST_FILE` | `Info-Dev.plist` or shared plist | `Info.plist` or shared plist | Keeps identity-sensitive plist values aligned |
-| `SWIFT_ACTIVE_COMPILATION_CONDITIONS` | `DEVELOPMENT` | empty or production defaults | Drives compile-time branching |
+## Storage and runtime
 
-If there are extension targets, also check their per-configuration:
+- [ ] app groups, `UserDefaults` suites, Core Data stores, file paths and
+      backups are environment-aware;
+- [ ] widgets/extensions read the matching container;
+- [ ] the user-visible name is bundle/configuration-driven; and
+- [ ] a single runtime configuration type owns environment branching.
 
-- `PRODUCT_BUNDLE_IDENTIFIER`
-- `CODE_SIGN_ENTITLEMENTS`
-- `INFOPLIST_FILE`
-- `INFOPLIST_KEY_CFBundleDisplayName`, if set in build settings
+## Services and signing
 
-## 3. Entitlements
+- [ ] analytics behavior is explicitly chosen;
+- [ ] Firebase/Crashlytics bundle registration is compatible or disabled;
+- [ ] RevenueCat identity and purchase behavior are explicitly chosen;
+- [ ] backend requests carry an explicit environment/preview marker or use a
+      staging endpoint;
+- [ ] APNs topics and environments match each App ID;
+- [ ] development App IDs and capabilities are registered in Apple Developer;
+- [ ] ad hoc profiles include the test devices for app and companions; and
+- [ ] Codemagic `device-preview` uses Preview while TestFlight uses Release.
 
-Every target that participates in shared storage must have matched debug and release entitlements.
+## Verification
 
-Typical app-group split:
-
-```xml
-<key>com.apple.security.application-groups</key>
-<array>
-    <string>group.com.example.app.dev</string>
-</array>
-```
-
-and
-
-```xml
-<key>com.apple.security.application-groups</key>
-<array>
-    <string>group.com.example.app</string>
-</array>
-```
-
-Check:
-
-- main app entitlements
-- widget entitlements
-- share extension entitlements
-- watch app / watch extension entitlements
-
-The most common mistake is updating the main app but forgetting the companion target.
-
-## 4. Info.plist And Generated Info Settings
-
-Check whether the app uses:
-
-- explicit plist keys inside `Info.plist`
-- generated plist values from target build settings
-- or a mix of both
-
-Identity-sensitive keys to inspect:
-
-- `CFBundleIdentifier`
-- `CFBundleDisplayName`
-- `CFBundleName`
-- `BGTaskSchedulerPermittedIdentifiers`
-- URL types or custom schemes
-- extension point identifiers and NSExtension metadata where applicable
-
-Important pattern:
-
-If a plist key should vary by build, prefer referencing a build setting instead of hardcoding.
-
-Example:
-
-```xml
-<key>CFBundleIdentifier</key>
-<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-```
-
-Example of a derived identifier that should stay dynamic:
-
-```xml
-<key>BGTaskSchedulerPermittedIdentifiers</key>
-<array>
-    <string>$(PRODUCT_BUNDLE_IDENTIFIER).refresh</string>
-    <string>$(PRODUCT_BUNDLE_IDENTIFIER).sync</string>
-</array>
-```
-
-That way the debug app and production app automatically get different task identifiers.
-
-## 5. Companion Targets
-
-If the app has widgets, extensions, or watch targets, treat them as part of the workflow.
-
-Check all of these for each companion target:
-
-- bundle identifier split
-- entitlements split
-- display-name expectations
-- shared-container alignment with the matching app build
-
-Recommended shape:
-
-- app debug -> extension debug
-- app release -> extension release
-
-Never point a debug extension at a production app group.
-
-## 6. Runtime Configuration Layer
-
-Add or verify a single runtime configuration type that exposes environment-aware values such as:
-
-- `isDevelopment`
-- `appGroupIdentifier`
-- `userDefaultsSuiteName`
-- `backupDirectoryName`
-- `baseURL`, if environments differ
-- feature flags that should only exist in development
-
-Preferred pattern:
-
-```swift
-enum AppConfiguration {
-    static var isDevelopment: Bool {
-        #if DEVELOPMENT
-        return true
-        #else
-        return false
-        #endif
-    }
-}
-```
-
-Do not scatter app-group strings, backup directory names, or environment checks across random files.
-
-## 7. Bundle-Derived User-Facing Naming
-
-If the development install should present itself as `App Dev`, the UI should usually read the bundle-driven display name rather than hardcode the app name.
-
-Check places like:
-
-- share text
-- settings/about copy
-- onboarding
-- notifications
-- widget titles or configuration strings
-
-## 8. Shared Storage And Data Isolation
-
-Search for:
-
-- `UserDefaults(suiteName:)`
-- app-group identifiers
-- backup folder names
-- file paths in app-group containers
-- widget sync helpers
-- extension sync helpers
-
-Confirm all of them use the environment-aware identifier rather than a hardcoded production value.
-
-## 9. Audit Queries
-
-Useful search terms when applying this workflow:
-
-- `PRODUCT_BUNDLE_IDENTIFIER`
-- `CODE_SIGN_ENTITLEMENTS`
-- `INFOPLIST_FILE`
-- `CFBundleDisplayName`
-- `CFBundleIdentifier`
-- `BGTaskSchedulerPermittedIdentifiers`
-- `UserDefaults(suiteName:`
-- `application-groups`
-- `group.`
-- `widget`
-- `extension`
-- `SWIFT_ACTIVE_COMPILATION_CONDITIONS`
-
-## 10. Completion Criteria
-
-The workflow is not complete until all of these are true:
-
-1. Debug and release have different app bundle IDs.
-2. Debug and release have different app groups.
-3. Companion targets follow the same split.
-4. plist-derived identifiers are dynamic where needed.
-5. Runtime helpers return environment-correct values.
-6. User-facing naming does not accidentally hide the distinction between development and production.
-7. Documentation explains the workflow so future edits do not collapse the split.
+- [ ] `verify-identities.sh` passes;
+- [ ] Debug simulator build passes;
+- [ ] Preview archive/ad hoc export passes;
+- [ ] Release archive/validation passes;
+- [ ] `verify-built-products.sh` passes for all three artifacts;
+- [ ] codesigned entitlements are inspected for app and companions;
+- [ ] development and production install side-by-side;
+- [ ] development data, widgets, links and notifications do not reach the
+      production containers; and
+- [ ] the Release identity and settings match the pre-migration snapshot.

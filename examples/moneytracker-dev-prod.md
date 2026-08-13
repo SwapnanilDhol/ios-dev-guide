@@ -1,12 +1,12 @@
 # MoneyTracker Dev/Prod Build Setup
 
-This document describes how MoneyTracker supports two side-by-side app installs — one for development/testing and one for production — using a single Xcode target with two build configurations.
+This document describes how MoneyTracker supports two side-by-side app installs — one for development/testing and one for production — using a single Xcode target with Debug, Preview, and Release build configurations.
 
 ---
 
 ## How It Works
 
-| Aspect | Development (Debug) | Production (Release) |
+| Aspect | Development (Debug/Preview) | Production (Release) |
 |--------|---------------------|----------------------|
 | **Bundle ID** | `com.swapnanildhol.MoneyTracker.dev` | `com.swapnanildhol.MoneyTracker` |
 | **Display Name** | Windfall Dev | Windfall |
@@ -20,6 +20,7 @@ Because the bundle IDs are different, iOS treats them as completely separate app
 ### In Practice
 
 - **Hitting Run in Xcode** → builds **Debug** config → installs **"Windfall Dev"**
+- **Codemagic device preview** → builds **Preview** config → installs **"Windfall Dev"**
 - **Archiving for TestFlight/App Store** → builds **Release** config → installs **"Windfall"**
 
 ---
@@ -29,8 +30,9 @@ Because the bundle IDs are different, iOS treats them as completely separate app
 ```
 Targets:
   └── MoneyTracker                    (single app target)
-        Debug   → DebugConfig.xcconfig   → dev bundle ID
-        Release → ReleaseConfig.xcconfig → prod bundle ID
+        Debug    → DebugConfig.xcconfig    → dev bundle ID
+        Preview  → PreviewConfig.xcconfig  → dev bundle ID, Release optimization
+        Release  → ReleaseConfig.xcconfig  → prod bundle ID
 
 Schemes:
   ├── MoneyTracker            (shared)
@@ -46,6 +48,7 @@ There is no separate `MoneyTrackerDev` target. The two builds are produced from 
 | File | Purpose |
 |------|---------|
 | `MoneyTracker/Configuration/DebugConfig.xcconfig` | Dev build settings: dev bundle ID, dev entitlements, dev icon, `DEVELOPMENT` compiler flag |
+| `MoneyTracker/Configuration/PreviewConfig.xcconfig` | Codemagic ad hoc settings: same dev identity, Release optimization, `PREVIEW` compiler flag |
 | `MoneyTracker/Configuration/ReleaseConfig.xcconfig` | Prod build settings: prod bundle ID, prod entitlements, prod icon |
 | `MoneyTracker/Configuration/Info/Info-Dev.plist` | Dev Info.plist (minimal, relies on generated keys for standard bundle values) |
 | `MoneyTracker/Configuration/Info/Info.plist` | Prod Info.plist (full, explicit bundle keys) |
@@ -121,9 +124,9 @@ This keeps the branching compile-time safe and consistent with the rest of `Conf
 
 ## Per-Build Configuration Details
 
-| Setting | Debug (Dev) | Release (Prod) |
+| Setting | Debug/Preview (Dev) | Release (Prod) |
 |---------|-------------|----------------|
-| `SWIFT_ACTIVE_COMPILATION_CONDITIONS` | `DEVELOPMENT` | *(empty)* |
+| `SWIFT_ACTIVE_COMPILATION_CONDITIONS` | `DEVELOPMENT DEBUG` / `DEVELOPMENT PREVIEW` | *(empty)* |
 | `PRODUCT_BUNDLE_IDENTIFIER` | `com.swapnanildhol.MoneyTracker.dev` | `com.swapnanildhol.MoneyTracker` |
 | `PRODUCT_NAME` | `MoneyTrackerDev` | `MoneyTracker` |
 | `DISPLAY_NAME` | `Windfall Dev` | `Windfall` |
@@ -140,6 +143,9 @@ This keeps the branching compile-time safe and consistent with the rest of `Conf
 # Development build
 xcodebuild -scheme MoneyTracker -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 17'
 
+# Registered-device preview build
+xcodebuild -scheme MoneyTracker -configuration Preview -destination 'generic/platform=iOS'
+
 # Production build
 xcodebuild -scheme MoneyTracker -configuration Release -destination 'platform=iOS Simulator,name=iPhone 17'
 ```
@@ -150,7 +156,7 @@ xcodebuild -scheme MoneyTracker -configuration Release -destination 'platform=iO
 
 If you're setting this up from scratch in a new project:
 
-- [ ] Create two `.xcconfig` files (Debug and Release)
+- [ ] Create three `.xcconfig` files (Debug, Preview, and Release)
 - [ ] Set `PRODUCT_BUNDLE_IDENTIFIER` to different values in each
 - [ ] Set `SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEVELOPMENT` in the Debug config
 - [ ] Create two `.entitlements` files with different app group IDs

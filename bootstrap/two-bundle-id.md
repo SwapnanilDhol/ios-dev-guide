@@ -5,6 +5,8 @@ Use two bundle IDs when you want development installs and production installs to
 The standard pattern is:
 
 - `Debug` builds install a development app.
+- `Preview` builds use the development identity with Release optimization for
+  Codemagic registered-device previews.
 - `Release` builds install a production app.
 - Both builds come from the same target and codebase.
 
@@ -27,8 +29,9 @@ The pattern usually looks like this:
 
 ```text
 One app target
-  Debug   -> development identity
-  Release -> production identity
+  Debug    -> development identity
+  Preview  -> development identity, Release optimization
+  Release  -> production identity
 
 Optional companion targets
   Widget / extension / watch target
@@ -62,6 +65,22 @@ Most projects place the split across these layers:
 - target build settings in the Xcode project
 - a small runtime configuration layer that exposes environment-aware identifiers
 
+Use the deterministic tooling shipped with the skill:
+
+```bash
+skills/two-bundle-id-workflow/scripts/discover-identities.sh /path/to/App \
+  --output /tmp/app-identities.json
+skills/two-bundle-id-workflow/scripts/verify-identities.sh /path/to/App
+```
+
+For a new app, generate non-overwriting starter files into an empty directory:
+
+```bash
+skills/two-bundle-id-workflow/scripts/bootstrap-identity-files.sh \
+  --product Example --bundle-id com.example.Example \
+  --output /tmp/example-identity-files
+```
+
 ## Coverage Matrix
 
 When implementing this pattern, do not stop at bundle IDs alone. A complete setup usually touches all of these:
@@ -83,8 +102,8 @@ If any one of these is left behind, the workflow can look correct while still le
 
 When maintaining this workflow, preserve these rules:
 
-1. Debug and release must always use different `PRODUCT_BUNDLE_IDENTIFIER` values.
-2. App-group identifiers must also be different across debug and release.
+1. Debug/Preview and Release must always use different `PRODUCT_BUNDLE_IDENTIFIER` values.
+2. App-group identifiers must also be different across development and release.
 3. Any widget, extension, watch app, or companion target must follow the same split.
 4. Shared storage and backup paths must stay environment-specific.
 5. User-visible naming should come from bundle-driven configuration, not hardcoded strings.
@@ -175,12 +194,13 @@ This pattern keeps the plist aligned with the active build configuration instead
 
 ## Rollout Checklist
 
-1. Create separate debug and release identity values.
-2. Give the development build a distinct display name and icon.
-3. Split app groups and entitlements the same way as bundle IDs.
-4. Make companion targets follow the same split.
-5. Route environment-aware values through one configuration type.
-6. Verify that development and production can both be installed at once.
+1. Create separate development and release identity values.
+2. Add Preview with the development identity and Release optimization.
+3. Give the development build a distinct display name and icon.
+4. Split app groups and entitlements the same way as bundle IDs.
+5. Make companion targets follow the same split.
+6. Route environment-aware values through one configuration type.
+7. Verify that development and production can both be installed at once.
 
 ## Key Principle
 
