@@ -71,6 +71,7 @@ Then open [`bootstrap/new-app-checklist.md`](bootstrap/new-app-checklist.md).
 | [Ads](stack/ads.md) | Wrapper-only AdsManager |
 | [Analytics](stack/analytics.md) | `AppEvent`, logger bridge |
 | [RevenueCat](stack/revenuecat.md) | ProManager, entitlements |
+| [App Attestation](stack/app-attestation.md) | App Attest sessions, RevenueCat binding, rollout |
 | [Update Banner](stack/update-available-banner.md) | Settings update strip |
 | [Code Snippets](stack/code-snippets.md) | Copy-pasteable helpers |
 
@@ -99,6 +100,7 @@ Then open [`bootstrap/new-app-checklist.md`](bootstrap/new-app-checklist.md).
 | [`skills/premium-onboarding`](skills/premium-onboarding/SKILL.md) | Implementing first-run onboarding |
 | [`skills/two-bundle-id-workflow`](skills/two-bundle-id-workflow/SKILL.md) | Touching bundle IDs / app groups |
 | [`skills/generate-app-store-screenshots`](skills/generate-app-store-screenshots/SKILL.md) | Capturing / composing ASC screenshots |
+| [`app-attestation`](skills/app-attestation/SKILL.md) | Implementing App Attest-backed app sessions |
 
 ### Examples (optional)
 
