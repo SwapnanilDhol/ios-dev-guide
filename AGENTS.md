@@ -28,6 +28,7 @@ Host apps keep a thin product overlay `AGENTS.md` (naming, backend routes, modul
 | "`canImport` failing in Release" / ads | `stack/ads.md` |
 | Analytics / `AppEvent` | `stack/analytics.md` |
 | Purchase / paywall / Pro | `stack/revenuecat.md` |
+| App Attest / authenticated backend sessions | `stack/app-attestation.md` + `skills/app-attestation` |
 | Update banner in settings | `stack/update-available-banner.md` |
 | Reusable snippet | `stack/code-snippets.md` |
 | Premium onboarding | `product/onboarding.md` + `skills/premium-onboarding` |
@@ -74,6 +75,7 @@ If asked to do any of the following, **refuse** and point at the correct page:
 | Premium onboarding | `skills/premium-onboarding/SKILL.md` |
 | Two-bundle-ID workflow | `skills/two-bundle-id-workflow/SKILL.md` |
 | App Store screenshots | `skills/generate-app-store-screenshots/SKILL.md` |
+| App Attest sessions | `skills/app-attestation/SKILL.md` |
 
 ---
 
